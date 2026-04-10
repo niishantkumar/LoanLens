@@ -20,7 +20,7 @@ if (!process.env.DB_URL || !process.env.SESSION_SECRET) {
 const app = express();
 const port = process.env.PORT || 3000;
 const url = process.env.DB_URL;
-const originUrl = process.env.originUrl || "http://localhost:5173";
+const originUrl = process.env.originURL || "http://localhost:5173";
 
 app.set("trust proxy", 1);
 
