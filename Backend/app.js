@@ -6,12 +6,10 @@ const cookieParser = require('cookie-parser');
 const session = require('express-session');
 const passport = require('passport');
 const LocalStrategy = require('passport-local').Strategy;
-
-const { MongoStore } = require('connect-mongo'); // Standard import
+const MongoStore = require('connect-mongo');
 
 const { User } = require("./models/userModel.js");
 
-// Checking env
 if (!process.env.DB_URL || !process.env.SESSION_SECRET) {
     console.error("Missing required environment variables");
     process.exit(1);
@@ -20,18 +18,21 @@ if (!process.env.DB_URL || !process.env.SESSION_SECRET) {
 const app = express();
 const port = process.env.PORT || 3000;
 const url = process.env.DB_URL;
+
+
 const originUrl = process.env.originURL || "http://localhost:5173";
 
 app.set("trust proxy", 1);
 
-
-
-console.log("ENV originUrl:", process.env.originURL);
-app.use(cors({
+const corsOptions = {
     origin: originUrl,
     credentials: true,
-    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"]
-}));
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"]
+};
+
+app.use(cors(corsOptions));
+app.options('*', cors(corsOptions));
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -42,9 +43,8 @@ app.use(session({
     resave: false,
     saveUninitialized: false,
     proxy: true,
-
     store: MongoStore.create({
-        mongoUrl: process.env.DB_URL,
+        mongoUrl: url,
         collectionName: "sessions",
         ttl: 6 * 24 * 60 * 60
     }),
@@ -69,7 +69,6 @@ const { loanRouter } = require("./routes/loanRoutes.js");
 app.use("/user", userRouter);
 app.use("/user/loan", loanRouter);
 
-// Error handling
 app.use((req, res) => {
     res.status(404).json({ message: "Route not found" });
 });
