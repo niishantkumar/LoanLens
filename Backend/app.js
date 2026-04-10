@@ -6,7 +6,7 @@ const cookieParser = require('cookie-parser');
 const session = require('express-session');
 const passport = require('passport');
 const LocalStrategy = require('passport-local').Strategy;
-const helmet = require('helmet');
+
 const { MongoStore } = require('connect-mongo'); // Standard import
 
 const { User } = require("./models/userModel.js");
@@ -24,7 +24,7 @@ const originUrl = process.env.originURL || "http://localhost:5173";
 
 app.set("trust proxy", 1);
 
-app.use(helmet());
+
 
 console.log("ENV originUrl:", process.env.originURL);
 app.use(cors({
