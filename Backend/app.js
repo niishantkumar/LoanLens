@@ -26,6 +26,7 @@ app.set("trust proxy", 1);
 
 app.use(helmet());
 
+console.log("ENV originUrl:", process.env.originUrl);
 app.use(cors({
     origin: originUrl,
     credentials: true,
