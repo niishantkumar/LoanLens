@@ -1,0 +1,82 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+
+  font-family: "Roboto", sans-serif;
+  color: #02316e;
+}
+
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #0d6efd;
+  border-radius: 10px;
+}
+
+.navbar-toggler {
+  background-color: white !important;
+  border: 1px solid #002b49 !important; /* Using your Navy brand color */
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+th {
+  color: #002b49 !important;
+}
+
+td {
+  color: #02316e;
+}
+
+.nav-item:active {
+  border-bottom: solid 1px #002b49;
+}
+
+/* navbar */
+/* Base style for the links */
+.custom-link {
+  color: #002b49 !important;
+  position: relative;
+  padding: 8px 15px !important;
+  transition: color 0.3s ease;
+}
+
+/* The bottom border effect using a pseudo-element */
+.custom-link::after {
+  content: "";
+  position: absolute;
+  width: 0;
+  height: 3px;
+  bottom: 0;
+  left: 50%;
+  background-color: #002b49; /* Color of the border */
+  transition: all 0.3s ease;
+  transform: translateX(-50%);
+}
+
+/* Show border on hover */
+.custom-link:hover::after {
+  width: 80%;
+}
+
+/* Permanent border for the Active link */
+.active-link::after {
+  width: 80% !important;
+  background-color: #0d6efd; /* Highlight color for active state */
+}
+
+.active-link {
+  color: #0d6efd !important; /* Optional: change text color when active */
+}
