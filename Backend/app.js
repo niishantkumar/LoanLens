@@ -29,8 +29,10 @@ app.set("trust proxy", 1);
 
 
 const corsOptions = {
-    origin: "https://loanlens-7fet.onrender.com",
-    credentials: true
+    origin: originUrl,
+    credentials: true,
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"]
 };
 
 app.use(cors(corsOptions));
@@ -52,8 +54,8 @@ app.use(session({
     }),
     cookie: {
         httpOnly: true,
-        secure: true,
-        sameSite: "none",
+        secure: process.env.NODE_ENV === "production",
+        sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
         maxAge: 1000 * 60 * 60 * 24 * 6
     }
 }));
@@ -65,6 +67,14 @@ app.use(passport.session());
 passport.use(new LocalStrategy(User.authenticate()));
 passport.serializeUser(User.serializeUser());
 passport.deserializeUser(User.deserializeUser());
+
+app.use((req, res, next) => {
+    console.log("---- REQUEST ----");
+    console.log("Session ID:", req.sessionID);
+    console.log("User:", req.user);
+    console.log("Auth:", req.isAuthenticated());
+    next();
+});
 
 // 6. Routes
 const { userRouter } = require("./routes/userRoutes.js");
