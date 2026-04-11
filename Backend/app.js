@@ -1,15 +1,25 @@
-require("dotenv").config();
-
-const express = require("express");
-const mongoose = require("mongoose");
-const cors = require("cors");
-const cookieParser = require("cookie-parser");
-const session = require("express-session");
-const passport = require("passport");
-const LocalStrategy = require("passport-local").Strategy;
-const { MongoStore } = require("connect-mongo"); // Fixed import: removed destructuring
+require('dotenv').config();
+const express = require('express');
+const mongoose = require('mongoose');
+const cors = require('cors');
+const cookieParser = require('cookie-parser');
+const session = require('express-session');
+const passport = require('passport');
+const LocalStrategy = require('passport-local').Strategy;
+const { MongoStore } = require('connect-mongo');
+const { status } = require("http-status");
 
 const { User } = require("./models/userModel.js");
+
+
+const url = process.env.DB_URL;
+const secret = process.env.SESSION_SECRET;
+const originUrl = "http://localhost:5173";
+
+if (!url || !secret) {
+    console.error("Missing DB_URL or SESSION_SECRET. Fix this in Render Environment settings.");
+    process.exit(1);
+}
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -17,49 +27,40 @@ const port = process.env.PORT || 3000;
 
 app.set("trust proxy", 1);
 
-const FRONTEND_URL = process.env.originURL;
-
-if (!process.env.DB_URL || !process.env.SESSION_SECRET || !FRONTEND_URL) {
-    console.error("Missing ENV variables");
-    process.exit(1);
-}
 
 const corsOptions = {
-    origin: FRONTEND_URL,
+    origin: originUrl,
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"]
 };
 
 app.use(cors(corsOptions));
-app.options("/(.*)", cors(corsOptions));
+
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
-// session
+
 app.use(session({
-    name: "loanlens.sid",
-    secret: process.env.SESSION_SECRET,
+    secret: secret,
     resave: false,
-    saveUninitialized: false,
+    saveUninitialized: true,
     proxy: true,
     store: MongoStore.create({
-        mongoUrl: process.env.DB_URL,
-        collectionName: "sessions",
-        ttl: 14 * 24 * 60 * 60 // 14 days
+        mongoUrl: url,
+        collectionName: "sessions"
     }),
     cookie: {
         httpOnly: true,
-        secure: true,
-        sameSite: "none",
-        maxAge: 1000 * 60 * 60 * 24 * 7,
-        path: "/",
+        secure: process.env.NODE_ENV === "production",
+        sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+        maxAge: 1000 * 60 * 60 * 24 * 6
     }
 }));
 
-// 4. passport config
+// 5. Passport Config
 app.use(passport.initialize());
 app.use(passport.session());
 
@@ -67,7 +68,7 @@ passport.use(new LocalStrategy(User.authenticate()));
 passport.serializeUser(User.serializeUser());
 passport.deserializeUser(User.deserializeUser());
 
-// routes
+// 6. Routes
 const { userRouter } = require("./routes/userRoutes.js");
 const { loanRouter } = require("./routes/loanRoutes.js");
 
@@ -79,22 +80,19 @@ app.use((req, res) => {
 });
 
 app.use((err, req, res, next) => {
-    console.error("Global Error Handler:", err.stack);
     res.status(500).json({ message: "Internal Server Error" });
 });
 
-// server
+
 async function start() {
     try {
-        await mongoose.connect(process.env.DB_URL);
+        await mongoose.connect(url);
         console.log("Database Connected");
-
         app.listen(port, () => {
-            console.log(`Server running on port ${port}`);
+            console.log(`Live on port ${port}`);
         });
-
     } catch (e) {
-        console.error("Connection Error:", e);
+        console.error(e);
         process.exit(1);
     }
 }
