@@ -32,11 +32,6 @@ app.use(cors({
     credentials: true
 }));
 
-app.options("*", cors({
-    origin: FRONTEND_URL,
-    credentials: true
-}));
-
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
