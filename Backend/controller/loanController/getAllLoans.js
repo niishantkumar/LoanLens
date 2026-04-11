@@ -4,6 +4,7 @@ const { status } = require("http-status");
 
 const getAllLoans = async (req, res) => {
     try {
+        console.log("Session User:", req.user);
         const loans = await Loan.find({ userId: req.user._id }).sort({ createdAt: -1 });
         res.status(status.OK).json({ success: true, loans });
     } catch (err) {
