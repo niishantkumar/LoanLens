@@ -1,22 +1,27 @@
 const { status } = require("http-status");
+const jwt = require("jsonwebtoken");
+
+const generateToken = (user) => {
+    return jwt.sign(
+        { _id: user._id, username: user.username },
+        process.env.JWT_SECRET,
+        { expiresIn: "7d" }
+    );
+};
+
 
 const userLogin = (req, res) => {
     try {
-        return res.status(status.OK).json({
+        const token = generateToken(req.user);
+        res.status(status.OK).json({
             success: true,
-            message: "Login successful",
-            user: {
-                username: req.user.username,
-                email: req.user.email
-            }
+            token,
+            user: { username: req.user.username, email: req.user.email }
         });
-
     } catch (err) {
-        return res.status(status.INTERNAL_SERVER_ERROR).json({
-            success: false,
-            message: err.message
-        });
+        res.status(500).json({ success: false, message: err.message });
     }
 };
+
 
 module.exports = { userLogin };

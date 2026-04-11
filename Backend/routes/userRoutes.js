@@ -2,61 +2,16 @@ const express = require("express");
 const router = express.Router();
 const passport = require("passport");
 
-
 const { userSignup } = require("../controller/userController/userSignup.js");
 const { userLogin } = require("../controller/userController/userLogin.js");
+const { getMe } = require("../controller/userController/getMe.js");
+const { isLoggedIn } = require("../middleware/isLoggedIn.js");
 
-// SIGNUP
 router.post("/signup", userSignup);
 
-// LOGIN
-router.post("/login", (req, res, next) => {
-    passport.authenticate("local", (err, user, info) => {
+// session: false is key here
+router.post("/login", passport.authenticate("local", { session: false }), userLogin);
 
-        if (err) {
-            return next(err);
-        }
+router.get("/me", isLoggedIn, getMe);
 
-
-        if (!user) {
-            return res.status(401).json({
-                success: false,
-                message: info && info.message ? info.message : "Invalid username or password"
-            });
-        }
-
-
-        req.logIn(user, (err) => {
-            if (err) return next(err);
-
-            return userLogin(req, res);
-        });
-    })(req, res, next);
-});
-
-// LOGOUT
-router.get("/logout", (req, res) => {
-    req.logout(() => {
-        res.json({ message: "Logged out successfully" });
-    });
-});
-
-//isLoggedin
-router.get("/me", (req, res) => {
-    if (req.isAuthenticated()) {
-        return res.status(200).json({
-            success: true,
-            user: {
-                username: req.user.username,
-                email: req.user.email
-            }
-        });
-    }
-
-    return res.status(401).json({
-        success: false,
-        message: "Not authenticated"
-    });
-});
-
-module.exports = { userRouter: router };
+module.exports = { userRoutes: router };
