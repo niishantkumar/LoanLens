@@ -6,7 +6,7 @@ const cookieParser = require('cookie-parser');
 const session = require('express-session');
 const passport = require('passport');
 const LocalStrategy = require('passport-local').Strategy;
-const { MongoStore } = require('connect-mongo');
+const MongoStore = require('connect-mongo');
 const { status } = require("http-status");
 
 const { User } = require("./models/userModel.js");
@@ -14,7 +14,7 @@ const { User } = require("./models/userModel.js");
 
 const url = process.env.DB_URL;
 const secret = process.env.SESSION_SECRET;
-const originUrl = "http://localhost:5173";
+const originUrl = process.env.originURL || "http://localhost:5173";
 
 if (!url || !secret) {
     console.error("Missing DB_URL or SESSION_SECRET. Fix this in Render Environment settings.");
