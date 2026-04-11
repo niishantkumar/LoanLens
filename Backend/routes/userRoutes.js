@@ -12,12 +12,12 @@ router.post("/signup", userSignup);
 // LOGIN
 router.post("/login", (req, res, next) => {
     passport.authenticate("local", (err, user, info) => {
-        // 1. Handle system errors
+
         if (err) {
             return next(err);
         }
 
-        // 2. Handle authentication failure (wrong password, user not found)
+
         if (!user) {
             return res.status(401).json({
                 success: false,
@@ -25,11 +25,10 @@ router.post("/login", (req, res, next) => {
             });
         }
 
-        // 3. Manually log the user in
+
         req.logIn(user, (err) => {
             if (err) return next(err);
 
-            // 4. Success! Call your userLogin controller
             return userLogin(req, res);
         });
     })(req, res, next);
