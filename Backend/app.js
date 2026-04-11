@@ -29,10 +29,8 @@ app.set("trust proxy", 1);
 
 
 const corsOptions = {
-    origin: originUrl,
-    credentials: true,
-    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization"]
+    origin: "https://loanlens-7fet.onrender.com",
+    credentials: true
 };
 
 app.use(cors(corsOptions));
@@ -46,7 +44,7 @@ app.use(cookieParser());
 app.use(session({
     secret: secret,
     resave: false,
-    saveUninitialized: true,
+    saveUninitialized: false,
     proxy: true,
     store: MongoStore.create({
         mongoUrl: url,
@@ -54,8 +52,8 @@ app.use(session({
     }),
     cookie: {
         httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+        secure: true,
+        sameSite: "none",
         maxAge: 1000 * 60 * 60 * 24 * 6
     }
 }));
