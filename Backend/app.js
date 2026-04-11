@@ -1,25 +1,15 @@
-require('dotenv').config();
-const express = require('express');
-const mongoose = require('mongoose');
-const cors = require('cors');
-const cookieParser = require('cookie-parser');
-const session = require('express-session');
-const passport = require('passport');
-const LocalStrategy = require('passport-local').Strategy;
-const { MongoStore } = require('connect-mongo');
-const { status } = require("http-status");
+require("dotenv").config();
+
+const express = require("express");
+const mongoose = require("mongoose");
+const cors = require("cors");
+const cookieParser = require("cookie-parser");
+const session = require("express-session");
+const passport = require("passport");
+const LocalStrategy = require("passport-local").Strategy;
+const { MongoStore } = require("connect-mongo");
 
 const { User } = require("./models/userModel.js");
-
-
-const url = process.env.DB_URL;
-const secret = process.env.SESSION_SECRET;
-const originUrl = process.env.originURL || "http://localhost:5173";
-
-if (!url || !secret) {
-    console.error("Missing DB_URL or SESSION_SECRET. Fix this in Render Environment settings.");
-    process.exit(1);
-}
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -28,16 +18,25 @@ const port = process.env.PORT || 3000;
 app.set("trust proxy", 1);
 
 
-const corsOptions = {
-    origin: originUrl,
-    credentials: true,
-    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization"]
-};
+const FRONTEND_URL = process.env.originURL;
 
-app.use(cors(corsOptions));
 
-app.options(/.*/, cors(corsOptions));
+if (!process.env.DB_URL || !process.env.SESSION_SECRET || !FRONTEND_URL) {
+    console.error("Missing ENV variables (DB_URL / SESSION_SECRET / originURL)");
+    process.exit(1);
+}
+
+
+app.use(cors({
+    origin: FRONTEND_URL,
+    credentials: true
+}));
+
+app.options("*", cors({
+    origin: FRONTEND_URL,
+    credentials: true
+}));
+
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -45,23 +44,25 @@ app.use(cookieParser());
 
 
 app.use(session({
-    secret: secret,
+    name: "connect.sid",
+    secret: process.env.SESSION_SECRET,
     resave: false,
     saveUninitialized: false,
     proxy: true,
+
     store: MongoStore.create({
-        mongoUrl: url,
+        mongoUrl: process.env.DB_URL,
         collectionName: "sessions"
     }),
     cookie: {
         httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
-        maxAge: 1000 * 60 * 60 * 24 * 6
+        secure: true,
+        sameSite: "none",
+        maxAge: 1000 * 60 * 60 * 24 * 7
     }
 }));
 
-// 5. Passport Config
+
 app.use(passport.initialize());
 app.use(passport.session());
 
@@ -69,29 +70,33 @@ passport.use(new LocalStrategy(User.authenticate()));
 passport.serializeUser(User.serializeUser());
 passport.deserializeUser(User.deserializeUser());
 
-// 6. Routes
+// routes
 const { userRouter } = require("./routes/userRoutes.js");
 const { loanRouter } = require("./routes/loanRoutes.js");
 
 app.use("/user", userRouter);
 app.use("/user/loan", loanRouter);
 
+
 app.use((req, res) => {
     res.status(404).json({ message: "Route not found" });
 });
 
 app.use((err, req, res, next) => {
+    console.error(err);
     res.status(500).json({ message: "Internal Server Error" });
 });
 
-
+//server
 async function start() {
     try {
-        await mongoose.connect(url);
+        await mongoose.connect(process.env.DB_URL);
         console.log("Database Connected");
+
         app.listen(port, () => {
-            console.log(`Live on port ${port}`);
+            console.log(`Server running on port ${port}`);
         });
+
     } catch (e) {
         console.error(e);
         process.exit(1);
